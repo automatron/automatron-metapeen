@@ -44,7 +44,6 @@ class AutomatronMetapeenPlugin(object):
             self.controller.config.update_plugin_value(self, client.server, channel, 'url', url)
         client.msg(user, 'OK')
 
-
     def on_message(self, client, user, channel, message):
         self._on_message(client, user, channel, message)
 
@@ -63,7 +62,6 @@ class AutomatronMetapeenPlugin(object):
                     service,
                 )))
                 scoreboard = sorted([(k, v) for k, v in scoreboard.items()], key=lambda p: -p[1])
-                print scoreboard
                 for i, (user, metascore) in enumerate(scoreboard):
                     if user.lower() == peen_user.lower():
                         if i < 3:
