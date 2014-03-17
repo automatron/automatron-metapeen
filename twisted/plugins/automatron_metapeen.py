@@ -1,5 +1,4 @@
 import json
-import re
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web.client import getPage
@@ -21,7 +20,7 @@ class AutomatronMetapeenPlugin(object):
         self.__watches = {}
 
     def _help(self, client, user):
-        client.msg(user, 'Usage: metapeen <url> <channel...>')
+        client.msg(user, 'Usage: metapeen <scoreboard url> <channel...>')
 
     def on_command(self, client, user, command, args):
         if command != 'metapeen':
@@ -42,7 +41,7 @@ class AutomatronMetapeenPlugin(object):
                 return
 
         for channel in channels:
-            self.controller.config.update_plugin_value(self, client.server, channel, 'metapeen', url)
+            self.controller.config.update_plugin_value(self, client.server, channel, 'url', url)
         client.msg(user, 'OK')
 
 
@@ -51,7 +50,7 @@ class AutomatronMetapeenPlugin(object):
 
     @defer.inlineCallbacks
     def _on_message(self, client, user, channel, message):
-        service, _ = yield self.controller.config.get_plugin_value(self, client.server, channel, 'metapeen')
+        service, _ = yield self.controller.config.get_plugin_value(self, client.server, channel, 'url')
         if not service:
             return
 
@@ -79,7 +78,12 @@ class AutomatronMetapeenPlugin(object):
                         pieces = []
                         for j in range(start, stop + 1):
                             user, metascore = scoreboard[j]
-                            pieces.append('\x02%d.\x02 %s (%d)' % (j + 1, user.encode('utf-8'), metascore))
+                            pieces.append('\x02%d.\x02' % (j + 1))
+                            if user == peen_user:
+                                pieces.append('\x034%s\x03' % user.encode('utf-8'))
+                            else:
+                                pieces.append(user.encode('utf-8'))
+                            pieces.append('(%d)' % metascore)
                         client.msg(channel, ' '.join(pieces))
                         break
                 else:
