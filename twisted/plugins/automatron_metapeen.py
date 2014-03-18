@@ -56,7 +56,7 @@ class AutomatronMetapeenPlugin(object):
         nickname = client.parse_user(user)[0]
 
         if message.startswith('!peen '):
-            peen_user = message.split(' ', 1)[1]
+            peen_user = message.split(' ', 1)[1].strip()
             try:
                 scoreboard = json.loads((yield getPage(
                     service,
