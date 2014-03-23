@@ -77,7 +77,7 @@ class AutomatronMetapeenPlugin(object):
                         for j in range(start, stop + 1):
                             user, metascore = scoreboard[j]
                             pieces.append('\x02%d.\x02' % (j + 1))
-                            if user == peen_user:
+                            if user.lower() == peen_user.lower():
                                 pieces.append('\x034%s\x03' % user.encode('utf-8'))
                             else:
                                 pieces.append(user.encode('utf-8'))
