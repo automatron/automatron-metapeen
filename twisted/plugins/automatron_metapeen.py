@@ -30,37 +30,37 @@ class AutomatronMetapeenPlugin(object):
             message
         )
 
-    def _help(self, client, user):
-        self._msg(client.server, user, 'Usage: metapeen <scoreboard url> <channel...>')
+    def _help(self, server, user):
+        self._msg(server['server'], user, 'Usage: metapeen <scoreboard url> <channel...>')
 
-    def on_command(self, client, user, command, args):
+    def on_command(self, server, user, command, args):
         if command != 'metapeen':
             return
 
         if len(args) >= 2:
-            self._on_command_metapeen(client, user, args[0], args[1:])
+            self._on_command_metapeen(server, user, args[0], args[1:])
         else:
-            self._help(client, user)
+            self._help(server, user)
 
         return STOP
 
     @defer.inlineCallbacks
-    def _on_command_metapeen(self, client, user, url, channels):
+    def _on_command_metapeen(self, server, user, url, channels):
         for channel in channels:
-            if not (yield self.controller.config.has_permission(client.server, channel, user, 'youtube-playlist')):
+            if not (yield self.controller.config.has_permission(server['server'], channel, user, 'metapeen')):
                 self._msg(client.server, user, 'You\'re not authorized to change settings for %s' % channel)
                 return
 
         for channel in channels:
-            self.controller.config.update_plugin_value(self, client.server, channel, 'url', url)
-        self._msg(client.server, user, 'OK')
+            self.controller.config.update_plugin_value(self, server['server'], channel, 'url', url)
+        self._msg(server['server'], user, 'OK')
 
-    def on_message(self, client, user, channel, message):
-        self._on_message(client, user, channel, message)
+    def on_message(self, server, user, channel, message):
+        self._on_message(server, user, channel, message)
 
     @defer.inlineCallbacks
-    def _on_message(self, client, user, channel, message):
-        service, _ = yield self.controller.config.get_plugin_value(self, client.server, channel, 'url')
+    def _on_message(self, server, user, channel, message):
+        service, _ = yield self.controller.config.get_plugin_value(self, server['server'], channel, 'url')
         if not service:
             return
 
@@ -93,11 +93,11 @@ class AutomatronMetapeenPlugin(object):
                             else:
                                 pieces.append(user.encode('utf-8'))
                             pieces.append('(%d)' % metascore)
-                        self._msg(client.server, channel, ' '.join(pieces))
+                        self._msg(server['server'], channel, ' '.join(pieces))
                         break
                 else:
-                    self._msg(client.server, channel, '%s: Could not find that user...' % nickname)
+                    self._msg(server['server'], channel, '%s: Could not find that user...' % nickname)
             except Exception as e:
                 log.err(e, 'Retrieving metapeen scoreboard failed')
-                self._msg(client.server, channel, '%s: derp' % nickname)
+                self._msg(server['server'], channel, '%s: derp' % nickname)
             defer.returnValue(STOP)
