@@ -7,6 +7,7 @@ from automatron.controller.command import IAutomatronCommandHandler
 from automatron.controller.plugin import IAutomatronPluginFactory
 from automatron.controller.client import IAutomatronMessageHandler
 from automatron.core.event import STOP
+from automatron.core.util import parse_user
 
 
 class AutomatronMetapeenPlugin(object):
@@ -54,7 +55,7 @@ class AutomatronMetapeenPlugin(object):
         if not service:
             return
 
-        nickname = client.parse_user(user)[0]
+        nickname = parse_user(user)[0]
 
         if message.startswith('!peen '):
             peen_user = message.split(' ', 1)[1].strip()
