@@ -4,6 +4,7 @@ from twisted.python import log
 from twisted.web.client import getPage
 from zope.interface import implements, classProvides
 from automatron.controller.command import IAutomatronCommandHandler
+from automatron.controller.controller import IAutomatronClientActions
 from automatron.controller.plugin import IAutomatronPluginFactory
 from automatron.controller.client import IAutomatronMessageHandler
 from automatron.core.event import STOP
@@ -21,8 +22,16 @@ class AutomatronMetapeenPlugin(object):
         self.controller = controller
         self.__watches = {}
 
+    def _msg(self, server, user, message):
+        self.controller.plugins.emit(
+            IAutomatronClientActions['message'],
+            server,
+            user,
+            message
+        )
+
     def _help(self, client, user):
-        client.msg(user, 'Usage: metapeen <scoreboard url> <channel...>')
+        self._msg(client.server, user, 'Usage: metapeen <scoreboard url> <channel...>')
 
     def on_command(self, client, user, command, args):
         if command != 'metapeen':
@@ -39,12 +48,12 @@ class AutomatronMetapeenPlugin(object):
     def _on_command_metapeen(self, client, user, url, channels):
         for channel in channels:
             if not (yield self.controller.config.has_permission(client.server, channel, user, 'youtube-playlist')):
-                client.msg(user, 'You\'re not authorized to change settings for %s' % channel)
+                self._msg(client.server, user, 'You\'re not authorized to change settings for %s' % channel)
                 return
 
         for channel in channels:
             self.controller.config.update_plugin_value(self, client.server, channel, 'url', url)
-        client.msg(user, 'OK')
+        self._msg(client.server, user, 'OK')
 
     def on_message(self, client, user, channel, message):
         self._on_message(client, user, channel, message)
@@ -84,11 +93,11 @@ class AutomatronMetapeenPlugin(object):
                             else:
                                 pieces.append(user.encode('utf-8'))
                             pieces.append('(%d)' % metascore)
-                        client.msg(channel, ' '.join(pieces))
+                        self._msg(client.server, channel, ' '.join(pieces))
                         break
                 else:
-                    client.msg(channel, '%s: Could not find that user...' % nickname)
+                    self._msg(client.server, channel, '%s: Could not find that user...' % nickname)
             except Exception as e:
                 log.err(e, 'Retrieving metapeen scoreboard failed')
-                client.msg(channel, '%s: derp' % nickname)
+                self._msg(client.server, channel, '%s: derp' % nickname)
             defer.returnValue(STOP)
