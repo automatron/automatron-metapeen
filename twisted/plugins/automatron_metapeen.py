@@ -3,9 +3,9 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.web.client import getPage
 from zope.interface import implements, classProvides
-from automatron.controller.command import IAutomatronCommandHandler
+from automatron.backend.command import IAutomatronCommandHandler
 from automatron.controller.controller import IAutomatronClientActions
-from automatron.controller.plugin import IAutomatronPluginFactory
+from automatron.backend.plugin import IAutomatronPluginFactory
 from automatron.controller.client import IAutomatronMessageHandler
 from automatron.core.event import STOP
 from automatron.core.util import parse_user
