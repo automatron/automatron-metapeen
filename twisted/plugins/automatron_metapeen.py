@@ -4,7 +4,6 @@ from twisted.python import log
 from twisted.web.client import getPage
 from zope.interface import implements, classProvides
 from automatron.backend.command import IAutomatronCommandHandler
-from automatron.controller.controller import IAutomatronClientActions
 from automatron.backend.plugin import IAutomatronPluginFactory
 from automatron.controller.client import IAutomatronMessageHandler
 from automatron.core.event import STOP
@@ -22,16 +21,8 @@ class AutomatronMetapeenPlugin(object):
         self.controller = controller
         self.__watches = {}
 
-    def _msg(self, server, user, message):
-        self.controller.plugins.emit(
-            IAutomatronClientActions['message'],
-            server,
-            user,
-            message
-        )
-
     def _help(self, server, user):
-        self._msg(server['server'], user, 'Usage: metapeen <scoreboard url> <channel...>')
+        self.controller.message(server['server'], user, 'Usage: metapeen <scoreboard url> <channel...>')
 
     def on_command(self, server, user, command, args):
         if command != 'metapeen':
@@ -48,12 +39,13 @@ class AutomatronMetapeenPlugin(object):
     def _on_command_metapeen(self, server, user, url, channels):
         for channel in channels:
             if not (yield self.controller.config.has_permission(server['server'], channel, user, 'metapeen')):
-                self._msg(client.server, user, 'You\'re not authorized to change settings for %s' % channel)
+                self.controller.message(server['server'], user,
+                                        'You\'re not authorized to change settings for %s' % channel)
                 return
 
         for channel in channels:
             self.controller.config.update_plugin_value(self, server['server'], channel, 'url', url)
-        self._msg(server['server'], user, 'OK')
+        self.controller.message(server['server'], user, 'OK')
 
     def on_message(self, server, user, channel, message):
         self._on_message(server, user, channel, message)
@@ -93,11 +85,11 @@ class AutomatronMetapeenPlugin(object):
                             else:
                                 pieces.append(user.encode('utf-8'))
                             pieces.append('(%d)' % metascore)
-                        self._msg(server['server'], channel, ' '.join(pieces))
+                        self.controller.message(server['server'], channel, ' '.join(pieces))
                         break
                 else:
-                    self._msg(server['server'], channel, '%s: Could not find that user...' % nickname)
+                    self.controller.message(server['server'], channel, '%s: Could not find that user...' % nickname)
             except Exception as e:
                 log.err(e, 'Retrieving metapeen scoreboard failed')
-                self._msg(server['server'], channel, '%s: derp' % nickname)
+                self.controller.message(server['server'], channel, '%s: derp' % nickname)
             defer.returnValue(STOP)
